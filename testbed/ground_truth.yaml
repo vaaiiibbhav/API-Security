@@ -1,0 +1,63 @@
+testbed_version: "1.0"
+description: "SAGA Research Testbed Security Ground Truth Classifications"
+
+endpoints:
+  - path: "/api/v1/documents/{doc_id}"
+    method: "GET"
+    classification: "vulnerable_bola"
+    vulnerability_type: "BOLA"
+    exploitable: true
+    description: "BOLA: Endpoint retrieves any document by ID without verifying if current_user.id matches doc.owner_id."
+    test_scenario:
+      attacker: "bob"
+      victim: "alice"
+      target_resource_id: 101
+      expected_status: 200
+
+  - path: "/api/v1/secure/documents/{doc_id}"
+    method: "GET"
+    classification: "secure_ownership"
+    vulnerability_type: null
+    exploitable: false
+    description: "Secure Ownership: Endpoint checks doc.owner_id == current_user.id and rejects unauthorized users."
+    test_scenario:
+      attacker: "bob"
+      victim: "alice"
+      target_resource_id: 101
+      expected_status: 403
+
+  - path: "/api/v1/secure/tenant/documents/{doc_id}"
+    method: "GET"
+    classification: "secure_tenant"
+    vulnerability_type: null
+    exploitable: false
+    description: "Secure Tenant: Endpoint checks doc.tenant_id == current_user.tenant_id and rejects cross-tenant access."
+    test_scenario:
+      attacker: "bob"
+      victim: "alice"
+      target_resource_id: 101
+      expected_status: 403
+
+  - path: "/api/v1/admin/users/{user_id}"
+    method: "DELETE"
+    classification: "vulnerable_bfla"
+    vulnerability_type: "BFLA"
+    exploitable: true
+    description: "BFLA: Administrative deletion endpoint missing role check (role == 'admin')."
+    test_scenario:
+      attacker: "alice"
+      target_resource_id: 2
+      expected_status: 200
+
+  - path: "/api/v1/secure/unknown/documents/{doc_id}"
+    method: "GET"
+    classification: "unknown_delegated"
+    vulnerability_type: null
+    exploitable: false
+    description: "UNKNOWN: Endpoint delegates authorization check to unresolved helper function check_custom_policy."
+    test_scenario:
+      attacker: "bob"
+      victim: "alice"
+      target_resource_id: 101
+      expected_status: 403
+
