@@ -31,6 +31,16 @@ class FindingType(str, Enum):
     POTENTIAL_BOPLA = "potential_bopla"
 
 
+class NotEstablishedReason(str, Enum):
+    """Categorized root causes for UNPROVEN / NOT_ESTABLISHED verification results."""
+
+    NONE = "none"
+    NO_AUTHORIZATION_FOUND = "no_authorization_found"
+    NON_DOMINATING_AUTHORIZATION = "non_dominating_authorization"
+    INCOMPLETE_DATAFLOW = "incomplete_dataflow"
+    UNSUPPORTED_POLICY = "unsupported_policy"
+
+
 class EndpointAnalysisReport(BaseModel):
     """Detailed static verification report for a single endpoint."""
 
@@ -50,6 +60,10 @@ class EndpointAnalysisReport(BaseModel):
 
     result: VerificationStatus
     candidate: CandidateVulnerability = CandidateVulnerability.NONE
+    finding: FindingType = FindingType.NONE
+    reason: NotEstablishedReason = NotEstablishedReason.NONE
+    unresolved_policy: bool = False
+    bypass_detected: bool = False
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     explanation: str = ""
 

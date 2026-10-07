@@ -7,6 +7,8 @@ from saga.ir.models import EndpointIR, PredicateType
 from saga.verifier.models import (
     CandidateVulnerability,
     EndpointAnalysisReport,
+    FindingType,
+    NotEstablishedReason,
     SAGAAnalysisSummary,
     VerificationStatus,
 )
@@ -111,14 +113,23 @@ def verify_endpoint_security(
     is_security_sensitive = object_entity != "NONE"
     has_rel = has_ownership or has_tenant
 
+    finding = FindingType.NONE
+    reason = NotEstablishedReason.NONE
+    unresolved_policy = is_delegated
+    bypass_detected = False
+
     if has_rel:
         result = VerificationStatus.PROVEN
         candidate = CandidateVulnerability.NONE
+        finding = FindingType.NONE
+        reason = NotEstablishedReason.NONE
         score += 0.25
         explanation = "Principal-object authorization relationship established statically."
     elif is_delegated:
         result = VerificationStatus.UNKNOWN
         candidate = CandidateVulnerability.NONE
+        finding = FindingType.POTENTIAL_BOLA if (is_externally_controllable and is_security_sensitive) else FindingType.NONE
+        reason = NotEstablishedReason.UNSUPPORTED_POLICY
         score += 0.15
         explanation = (
             "Authorization logic is delegated to an unresolved helper "
@@ -127,6 +138,8 @@ def verify_endpoint_security(
     elif is_externally_controllable and is_security_sensitive:
         result = VerificationStatus.UNPROVEN
         candidate = CandidateVulnerability.BOLA
+        finding = FindingType.POTENTIAL_BOLA
+        reason = NotEstablishedReason.NO_AUTHORIZATION_FOUND
         explanation = (
             "Externally controllable security-sensitive object accessed without locally "
             "established principal-object authorization relationship."
@@ -134,6 +147,8 @@ def verify_endpoint_security(
     else:
         result = VerificationStatus.UNPROVEN
         candidate = CandidateVulnerability.NONE
+        finding = FindingType.NONE
+        reason = NotEstablishedReason.NO_AUTHORIZATION_FOUND
         explanation = "No static principal-object authorization relationship established."
 
     confidence = round(min(1.0, score), 2)
@@ -151,6 +166,10 @@ def verify_endpoint_security(
         graph_edges=graph_edges,
         result=result,
         candidate=candidate,
+        finding=finding,
+        reason=reason,
+        unresolved_policy=unresolved_policy,
+        bypass_detected=bypass_detected,
         confidence=confidence,
         explanation=explanation,
     )
