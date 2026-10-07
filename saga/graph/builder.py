@@ -48,7 +48,7 @@ class AuthorizationGraph:
     """Evidence-preserving SAGA Authorization Graph built on NetworkX."""
 
     def __init__(self) -> None:
-        self.graph = nx.DiGraph()
+        self.graph = nx.MultiDiGraph()
 
     def add_node(
         self,
@@ -188,10 +188,10 @@ class AuthorizationGraph:
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize graph to dictionary."""
-        nodes = [{"id": n, **data} for n, data in sorted(self.graph.nodes(data=True))]
+        nodes = [{"id": n, **data} for n, data in sorted(self.graph.nodes(data=True), key=lambda x: str(x[0]))]
         edges = [
             {"source": u, "target": v, **data}
-            for u, v, data in sorted(self.graph.edges(data=True))
+            for u, v, data in sorted(self.graph.edges(data=True), key=lambda x: (str(x[0]), str(x[1])))
         ]
         return {"nodes": nodes, "edges": edges}
 

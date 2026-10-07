@@ -22,6 +22,15 @@ class CandidateVulnerability(str, Enum):
     NONE = "NONE"
 
 
+class FindingType(str, Enum):
+    """Vulnerability finding type decoupled from verification status."""
+
+    NONE = "none"
+    POTENTIAL_BOLA = "potential_bola"
+    POTENTIAL_BFLA = "potential_bfla"
+    POTENTIAL_BOPLA = "potential_bopla"
+
+
 class EndpointAnalysisReport(BaseModel):
     """Detailed static verification report for a single endpoint."""
 

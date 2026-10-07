@@ -111,7 +111,12 @@ def verify_endpoint_security(
     is_security_sensitive = object_entity != "NONE"
     has_rel = has_ownership or has_tenant
 
-    if is_delegated:
+    if has_rel:
+        result = VerificationStatus.PROVEN
+        candidate = CandidateVulnerability.NONE
+        score += 0.25
+        explanation = "Principal-object authorization relationship established statically."
+    elif is_delegated:
         result = VerificationStatus.UNKNOWN
         candidate = CandidateVulnerability.NONE
         score += 0.15
@@ -119,8 +124,7 @@ def verify_endpoint_security(
             "Authorization logic is delegated to an unresolved helper "
             "function or external policy check."
         )
-
-    elif is_externally_controllable and is_security_sensitive and not has_rel:
+    elif is_externally_controllable and is_security_sensitive:
         result = VerificationStatus.UNPROVEN
         candidate = CandidateVulnerability.BOLA
         explanation = (
@@ -128,10 +132,9 @@ def verify_endpoint_security(
             "established principal-object authorization relationship."
         )
     else:
-        result = VerificationStatus.PROVEN
+        result = VerificationStatus.UNPROVEN
         candidate = CandidateVulnerability.NONE
-        score += 0.25
-        explanation = "Principal-object authorization relationship established statically."
+        explanation = "No static principal-object authorization relationship established."
 
     confidence = round(min(1.0, score), 2)
 
